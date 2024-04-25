@@ -23,6 +23,9 @@ class LogRoute
         if (app()->environment('local')) {
             $log_request = new LogRequest;
             $log_request->auth_user = Auth::user();
+            if (is_null($log_request->auth_user)) {
+                $log_request->auth_user = "none";
+            }
             $log_request->uri = $request->getUri();
             $log_request->method = $request->getMethod();
             $log_request->request_body = $request->getContent();
