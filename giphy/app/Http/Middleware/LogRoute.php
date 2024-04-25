@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth as Auth;
+use App\Models\LogRequest as LogRequest;
 
 class LogRoute
 {
@@ -20,17 +21,15 @@ class LogRoute
         $response = $next($request);
 
         if (app()->environment('local')) {
-            $log = [
-                'USER' => Auth::user(),
-                'URI' => $request->getUri(),
-                'METHOD' => $request->getMethod(),
-                'REQUEST_BODY' => $request->all(),
-                'RESPONSE' => $response->getContent(),
-                'RESPONSE_STATUS' => $response->status(),
-                'REQUEST_IP' => $request->ip(),
-            ];
-
-            Log::info(json_encode($log));
+            $log_request = new LogRequest;
+            $log_request->auth_user = Auth::user();
+            $log_request->uri = $request->getUri();
+            $log_request->method = $request->getMethod();
+            $log_request->request_body = $request->getContent();
+            $log_request->response_body = $response->getContent();
+            $log_request->response_status = $response->status();
+            $log_request->request_ip = $request->ip();
+            $log_request->save();
         }
 
         return $response;
