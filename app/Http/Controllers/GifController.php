@@ -7,6 +7,14 @@ use GuzzleHttp\Client;
 
 class GifController extends Controller
 {
+
+    protected Client $client;
+
+    public function __construct(Client $client)
+    {
+        $this->client = $client;
+    }
+
     /**
      * @OA\Get(
      * path="/api/v1/gifs",
@@ -32,8 +40,7 @@ class GifController extends Controller
         $api_key = env("GIPHY_API_KEY");
         $url = env("GIPHY_API_URL_SEARCH");
 
-        $client = new Client();
-        $response = $client->request("GET", $url, ["query" => [
+        $response = $this->client->request("GET", $url, ["query" => [
             "api_key" => $api_key,
             "q" => $q,
             "limit" => $limit,
@@ -63,8 +70,7 @@ class GifController extends Controller
         $api_key = env("GIPHY_API_KEY");
         $url = env("GIPHY_API_URL_BYID") . $id;
 
-        $client = new Client();
-        $response = $client->request("GET", $url, ["query" => [
+        $response = $this->client->request("GET", $url, ["query" => [
             "api_key" => $api_key,
         ]]);
         
