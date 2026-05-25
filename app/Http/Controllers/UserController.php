@@ -3,77 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User as User;
-use App\Models\Favorite as Favorite;
-use GuzzleHttp\Client;
+use App\Models\User;
+use App\Models\Favorite;
 
 class UserController extends Controller
 {
-    public function query(Request $request) {
-        if (!$request->has("q")) {
+    /**
+     * @OA\Post(
+     * path="/api/v1/gifs/favorites",
+     * summary="Guardar un GIF en los favoritos del usuario",
+     * tags={"Giphy Endpoints"},
+     * security={{"bearerAuth": {}}},
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"gif_id","alias","user_id"},
+     * @OA\Property(property="gif_id", type="string", example="3rVme9JE8xrlW"),
+     * @OA\Property(property="alias", type="string", example="Mi favorito"),
+     * @OA\Property(property="user_id", type="integer", example=1)
+     * )
+     * ),
+     * @OA\Response(response=200, description="Guardado exitoso o ya existente"),
+     * @OA\Response(response=400, description="Error en los parámetros de entrada")
+     * )
+     */
+    public function saveAsFavorite(Request $request) {
+        if (!$request->has(["gif_id", "alias", "user_id"])) {
             return response(["message" => "Bad Request"], 400);
         }
-        $q = $request->input("q");
-        $limit = ($request->has("limit")) ? $request->input("limit") : env("GIPHY_DEFAULT_LIMIT");
-        $offset = ($request->has("offset")) ? $request->input("offset") : env("GIPHY_DEFAULT_OFFSET");
 
-        $api_key = env("GIPHY_API_KEY");
-        $url = env("GIPHY_API_URL_SEARCH");
-
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request("GET", $url, ["query" => [
-            "api_key" => $api_key,
-            "q" => $q,
-            "limit" => $limit,
-            "offset" => $offset,
-        ]]);
-        $statusCode = $response->getStatusCode();
-        $stream = $response->getBody();
-        $body = json_decode($stream->getContents());
-        return response($body->data, $statusCode);
-    }
-
-    function getGifById(Request $request) {
-        if (!$request->has("id")) {
-            return response(["message" => "Bad Request"], 400);
+        if (!User::where('id', $request->input('user_id'))->exists()) {
+            return response(["message" => "User not found"], 400);
         }
-        $id = $request->input("id");
-        $api_key = env("GIPHY_API_KEY");
-        $url = env("GIPHY_API_URL_BYID") . $id;
 
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request("GET", $url, ["query" => [
-            "api_key" => $api_key,
-        ]]);
-        $statusCode = $response->getStatusCode();
-        $stream = $response->getBody();
-        $body = json_decode($stream->getContents());
-        return response(json_encode($body->data), $statusCode);
-    }
+        // Evitar duplicados semánticos
+        $favorite = Favorite::firstOrCreate([
+            'uid'   => $request->input('user_id'),
+            'gid'   => $request->input('gif_id'),
+            'alias' => $request->input('alias')
+        ]);
 
-    function saveAsFavorite(Request $request) {
-        if (!$request->has("gif_id") or !$request->has("alias") or !$request->has('user_id')) {
-            return response(["message" => "Bad Request"], 400);
-        }
-        $user = new User;
-        $user_data = $user->where('id', $request->input('user_id'));
-        if($user_data->count() == 0) {
-            return response(["message" => "Bad Request"], 400);
-        }
-        $favorite = new Favorite;
-        $favorite_data = $favorite->where('uid', $request->input('user_id'))
-                                  ->where('gid', $request->input('gif_id'))
-                                  ->where('alias', $request->input('alias'));
-        if($favorite_data->count() == 0) {
-            $favorite->uid = $request->input('user_id');
-            $favorite->gid = $request->input('gif_id');
-            $favorite->alias = $request->input('alias');
-            if ($favorite->save()) {
-                return response(["message" => ""], 200);
-            }
-        } else {
-            return response(["message" => ""], 200);
-        }
-        return response(["message" => "Internal Server Error"], 500);
+        return response(["message" => "Favorite processed successfully"], 200);
     }
 }
