@@ -1,116 +1,92 @@
-# giphy
-Integración con el api giphy
+# Giphy API Integration Service
 
-Este proyecto usa las siguientes tecnologías:
+A production-ready RESTful API built with **Laravel 10** that integrates with the external **Giphy API**. The system features user authentication, secure endpoint protection using **Laravel Passport (OAuth2)**, and automated containerization via **Laravel Sail / Docker**.
 
-1) Composer
-2) Laravel 10
-3) MySQL
-4) Docker
-5) Postman (para hacer pruebas manuales con el archivo postman enviado en el email al reclutador)
+---
 
-Debe contarse con el software correspondiente para la ejecución del proyecto
+## 🏗️ System Architecture & Authentication Flow
 
-# Pasos de ejecución del proyecto
-1) Descargar el repositorio
-2) Entrar en directorio giphy
-3) Crear archivo .env con los siguientes datos
+```mermaid
+graph TD
+    Client[HTTP Client / Postman] -->|1. POST /api/v1/user/create| API[Laravel API]
+    Client -->|2. POST /oauth/token| Passport[Laravel Passport]
+    Passport -->|Returns Bearer Token| Client
+    Client -->|3. GET /api/v1/gifs/search?query=Bearer Token| API
+    API -->|Secure External Request| Giphy[Giphy Third-Party API]
+```
 
-APP_NAME=Laravel
-APP_ENV=local
-APP_KEY=base64:WvZ8a+/dqUxsq4crsqvsEe//NMb7q0JznjmQCvMsbvk=
-APP_DEBUG=true
-APP_URL=http://localhost:8000
+🛠️ Features & Tech Stack
+Core Framework: Laravel 10
 
-LOG_CHANNEL=stack
-LOG_DEPRECATIONS_CHANNEL=null
-LOG_LEVEL=debug
+Authentication: Laravel Passport (Bearer Tokens / OAuth2)
 
-DB_CONNECTION=mysql
-DB_HOST=mysql
-#DB_PORT=3306
-DB_DATABASE=giphy
-DB_USERNAME=sail
-DB_PASSWORD=password
-FORWARD_DB_PORT=3307
+Database: MySQL
+
+Environment & Containerization: Docker / Laravel Sail
+
+External Integration: Giphy API (Search and Fetch by ID)
+
+🚀 Getting Started & Local Setup
+Prerequisites
+Ensure you have Docker Desktop installed and running on your system.
+
+1. Environment Configuration
+Clone the repository and move to the root directory. Create your local environmental file:
+
+```
+Bash
+
+cp .env.example .env
+
+```
+
+Open the .env file and verify or update your Giphy API Credentials:
+
+```
 
 GIPHY_API_KEY=SnfUK2t9gZTA2leY6JkZ0Ma9FxCwIoRA
-GIPHY_API_URL_SEARCH=https://api.giphy.com/v1/gifs/search
-GIPHY_API_URL_BYID=https://api.giphy.com/v1/gifs/
-GIPHY_DEFAULT_LIMIT=25
-GIPHY_DEFAULT_OFFSET=0
+GIPHY_API_URL_SEARCH=[https://api.giphy.com/v1/gifs/search](https://api.giphy.com/v1/gifs/search)
+GIPHY_API_URL_BYID=[https://api.giphy.com/v1/gifs/](https://api.giphy.com/v1/gifs/)
 
-BROADCAST_DRIVER=log
-CACHE_DRIVER=file
-FILESYSTEM_DISK=local
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
+```
 
-MEMCACHED_HOST=127.0.0.1
+2. Launch the Application with Docker (Laravel Sail)
+Bring up the multi-container environment in detached mode:
 
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-
-MAIL_MAILER=smtp
-MAIL_HOST=mailpit
-MAIL_PORT=1025
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS="hello@example.com"
-MAIL_FROM_NAME="${APP_NAME}"
-
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-PUSHER_APP_ID=
-PUSHER_APP_KEY=
-PUSHER_APP_SECRET=
-PUSHER_HOST=
-PUSHER_PORT=443
-PUSHER_SCHEME=https
-PUSHER_APP_CLUSTER=mt1
-
-VITE_APP_NAME="${APP_NAME}"
-VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
-VITE_PUSHER_HOST="${PUSHER_HOST}"
-VITE_PUSHER_PORT="${PUSHER_PORT}"
-VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
-VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
-
-4) Entrar en la consola de comandos
-5) Entrar al subdirectorio giphy
-6) Generar contenedor Docker con Laravel Sail
+```
+Bash
 
 ./vendor/bin/sail up -d
 
-7) Ejecutar migraciones y generar claves passport
+```
+
+3. Run Database Migrations & Install OAuth Keys
+Access the running container infrastructure to create the database schema and generate the secure cryptographic keys required for OAuth2 tokens:
+
+```
+Bash
 
 ./vendor/bin/sail artisan migrate
 ./vendor/bin/sail artisan passport:install
 
-8) Una vez realizado esto deberíamos tener un contenedor ejecutándose con la app en el puerto 80
+```
 
-# Nota:
-Si bien no se solicita en el test propuesto por el reclutador, yo armé un endpoint extra para poder 
-crear usuarios con los cuales probar los endpoints solicitados para el examen.
+The application will now be fully operational locally at http://localhost:80.
 
-Por lo tanto, los endpoints que figuran en el archivo postman tienen este extra que debería ejecutarse
-en primer lugar.
+🔌 API Endpoints Reference
+🔐 Authentication & User Management
+POST /api/v1/user/create Custom endpoint designed to register new testing users directly within the local ecosystem.
 
-/api/v1/user/create
+POST /oauth/token Standard Passport endpoint to authenticate credentials and request an Access Token (Expires in 30 minutes).
 
-# Diagramas DER, Casos de Uso y de Secuencia
-Fueron enviados como archivos adjuntos en el email en el que aviso que el proyecto está listo.
+🎬 Giphy Integration (Protected Endpoints)
+These endpoints require a valid Authorization: Bearer <token> header.
 
-# Postman
-Se envia como archivo adjunto en el email, una colección de comandos de postman que tienen configurado
-como variable global el valor del {{token}} que se obtiene al ejecutar el metodo de login.
-Dicho método debe ser ejecutado antes de poder usarse los métodos de busqueda o de marcar favorito ya que
-sino la applicación devolverá un error por no estar logueados.
-Dicho token dura 30 minutos.
+GET /api/v1/gifs/search?query={search_term} Queries the Giphy API for matching items using optimized default pagination limits and offsets.
+
+GET /api/v1/gifs/{id} Retrieves deep detailed object payloads for a single GIF directly by its unique identifier.
+
+🧪 Postman Collection
+An export of the Postman integration testing environment can be found directly within the repository root (look for the .json collection file). Ensure you trigger the User Creation and Login workflows first to save the {{token}} global variable before querying protected endpoints.
+
+
