@@ -1,23 +1,23 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\GifController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+// 1. Rutas públicas de usuarios
+Route::prefix('/users')->group(function() {
+    Route::post('/', [LoginController::class, 'create'])->middleware('log.route');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('log.route');
+});
 
-Route::prefix('/user')->group(function(){
-    Route::post('/create', 'App\Http\Controllers\LoginController@create')->middleware('log.route');;
-    Route::post('/login', 'App\Http\Controllers\LoginController@login')->middleware('log.route');;
-    Route::middleware('auth:api')->get('/gif/query','App\Http\Controllers\UserController@query')->middleware('log.route');;
-    Route::middleware('auth:api')->get('/gif/get','App\Http\Controllers\UserController@getGifById')->middleware('log.route');;
-    Route::middleware('auth:api')->post('/gif/favorite','App\Http\Controllers\UserController@saveAsFavorite')->middleware('log.route');;
+// 2. Rutas protegidas de GIFs
+Route::middleware(['auth:api', 'log.route'])->group(function() {
+    
+    // Mapeo directo al nuevo GifController
+    Route::get('/gifs', [GifController::class, 'query']);
+    Route::get('/gifs/{id}', [GifController::class, 'getGifById']);
+    
+    // Mapeo de relación al UserController
+    Route::post('/gifs/favorites', [UserController::class, 'saveAsFavorite']);
 });

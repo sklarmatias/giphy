@@ -14,8 +14,16 @@
                 <span class="text-2xl font-black tracking-wider text-indigo-400">GIPHY</span>
                 <span class="px-2 py-0.5 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">API v1.0</span>
             </div>
-            <div class="text-sm text-slate-400">
-                Environment: <span class="text-emerald-400 font-mono">local</span>
+            <div class="text-sm text-slate-400 flex items-center space-x-4">
+                <div>
+                    Environment: <span class="text-emerald-400 font-mono">local</span>
+                </div>
+                <div class="flex items-center space-x-2 border-l border-slate-700 pl-4">
+                    <a href="/api/documentation" class="inline-flex items-center space-x-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-900 font-bold text-xs rounded-lg transition-all shadow-lg shadow-orange-500/10">
+                        <span>🚀</span>
+                        <span>Ver Swagger UI</span>
+                    </a>
+                </div>
             </div>
         </div>
     </header>

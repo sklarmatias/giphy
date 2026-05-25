@@ -1,0 +1,308 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Giphy Integration API Documentation",
+        "description": "API RESTful para la integración y búsqueda de GIFs protegida por Laravel Passport",
+        "contact": {
+            "email": "tu-email@ejemplo.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Servidor Local de Desarrollo"
+        }
+    ],
+    "paths": {
+        "/api/v1/gifs": {
+            "get": {
+                "tags": [
+                    "Giphy Endpoints"
+                ],
+                "summary": "Buscar GIFs en Giphy API",
+                "operationId": "b45c24a7283dfa33a382d3442705069b",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Palabra clave",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "matrix"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Límite",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Desplazamiento",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listado de GIFs devuelto exitosamente"
+                    },
+                    "400": {
+                        "description": "Falta el parámetro 'q'"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/gifs/{id}": {
+            "get": {
+                "tags": [
+                    "Giphy Endpoints"
+                ],
+                "summary": "Obtener un GIF específico por su ID",
+                "operationId": "09db6fa50703d7781aad1fbf78f79842",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del GIF",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "3rVme9JE8xrlW"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estructura de datos del GIF"
+                    },
+                    "400": {
+                        "description": "ID inválido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "operationId": "d6b90ae9b06ac8838b7cf2f0e4748181",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Juan Pérez"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User created ok"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/login": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Iniciar sesión y obtener Bearer Token",
+                "operationId": "e53d2ade1acd37aaac48b6142aca2eef",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login correcto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiI3..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciales inválidas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid email or password"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gifs/favorites": {
+            "post": {
+                "tags": [
+                    "Giphy Endpoints"
+                ],
+                "summary": "Guardar un GIF en los favoritos del usuario",
+                "operationId": "e165c42bb4bf018535a21de51a767c3c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "gif_id",
+                                    "alias",
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "gif_id": {
+                                        "type": "string",
+                                        "example": "3rVme9JE8xrlW"
+                                    },
+                                    "alias": {
+                                        "type": "string",
+                                        "example": "Mi favorito"
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Guardado exitoso o ya existente"
+                    },
+                    "400": {
+                        "description": "Error en los parámetros de entrada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Ingresá el 'access_token' obtenido en el login para consumir los endpoints protegidos.",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Giphy Endpoints",
+            "description": "Giphy Endpoints"
+        },
+        {
+            "name": "Autenticación",
+            "description": "Autenticación"
+        }
+    ]
+}
