@@ -8,14 +8,20 @@ A production-ready RESTful API built with **Laravel 10** that integrates with th
 
 ```mermaid
 graph TD
-    Client[HTTP Client / Postman] -->|1. POST /api/v1/user/create| API[Laravel API]
-    Client -->|2. POST /oauth/token| Passport[Laravel Passport]
-    Passport -->|Returns Bearer Token| Client
-    Client -->|3. GET /api/v1/gifs/search?query=Bearer Token| API
+    Client[HTTP Client / Swagger] -->|1. POST /api/v1/users| API[Laravel API]
+    Client -->|2. POST /api/v1/users/login| API
+    API -->|Issues Bearer Token| Client
+    Client -->|3. GET /api/v1/gifs?q=query + Bearer Token| API
     API -->|Secure External Request| Giphy[Giphy Third-Party API]
 ```
 
-🛠️ Features & Tech Stack
+The service architecture strictly adheres to SOLID principles and clean RESTful Resource Routing:
+
+Separation of Concerns: Business logic is decoupled, keeping the user domain (UserController) completely isolated from third-party API processing (GifController).
+
+Dependency Injection: The HTTP Client (GuzzleHttp\Client) is managed natively by Laravel’s Service Container, enabling loose coupling and robust isolated automated testing.
+
+### 🛠️ Features & Tech Stack
 Core Framework: Laravel 10
 
 Authentication: Laravel Passport (Bearer Tokens / OAuth2)
@@ -24,14 +30,16 @@ Database: MySQL
 
 Environment & Containerization: Docker / Laravel Sail
 
-External Integration: Giphy API (Search and Fetch by ID)
+Documentation: Swagger (OpenAPI 3.0)
 
-🚀 Getting Started & Local Setup
+External Integration: Giphy API (Search and Fetch by ID via decoupled service architecture)
+
+### 🚀 Getting Started & Local Setup
 Prerequisites
 Ensure you have Docker Desktop installed and running on your system.
 
 1. Environment Configuration
-Clone the repository and move to the root directory. Create your local environmental file:
+Clone the repository, navigate to the root directory, and copy the environment template:
 
 ```
 Bash
@@ -40,18 +48,21 @@ cp .env.example .env
 
 ```
 
-Open the .env file and verify or update your Giphy API Credentials:
+Open the .env file and verify or update your Giphy API credentials and pagination defaults:
 
 ```
+Ini, TOML
 
 GIPHY_API_KEY=SnfUK2t9gZTA2leY6JkZ0Ma9FxCwIoRA
 GIPHY_API_URL_SEARCH=[https://api.giphy.com/v1/gifs/search](https://api.giphy.com/v1/gifs/search)
 GIPHY_API_URL_BYID=[https://api.giphy.com/v1/gifs/](https://api.giphy.com/v1/gifs/)
+GIPHY_DEFAULT_LIMIT=25
+GIPHY_DEFAULT_OFFSET=0
 
 ```
 
 2. Launch the Application with Docker (Laravel Sail)
-Bring up the multi-container environment in detached mode:
+Bring up the multi-container development environment in detached mode:
 
 ```
 Bash
@@ -61,7 +72,7 @@ Bash
 ```
 
 3. Run Database Migrations & Install OAuth Keys
-Access the running container infrastructure to create the database schema and generate the secure cryptographic keys required for OAuth2 tokens:
+Access the running container infrastructure to build the database schema and generate the cryptographic keys required for issuing secure OAuth2 tokens:
 
 ```
 Bash
@@ -71,22 +82,68 @@ Bash
 
 ```
 
-The application will now be fully operational locally at http://localhost:80.
+The application will now be fully operational locally at http://localhost:8000
 
-🔌 API Endpoints Reference
-🔐 Authentication & User Management
-POST /api/v1/user/create Custom endpoint designed to register new testing users directly within the local ecosystem.
 
-POST /oauth/token Standard Passport endpoint to authenticate credentials and request an Access Token (Expires in 30 minutes).
+### 📖 Interactive API Documentation (Swagger)
+The service includes an interactive API specification interface powered by Swagger. You can authorize requests, execute live calls against the local database, and inspect Giphy payloads directly from your browser.
 
-🎬 Giphy Integration (Protected Endpoints)
-These endpoints require a valid Authorization: Bearer <token> header.
+Accessing the UI:
+Ensure your Sail containers are up and running.
 
-GET /api/v1/gifs/search?query={search_term} Queries the Giphy API for matching items using optimized default pagination limits and offsets.
+Navigate to: http://localhost:8000/api/documentation
 
-GET /api/v1/gifs/{id} Retrieves deep detailed object payloads for a single GIF directly by its unique identifier.
+Regenerating Documentation:
+If you modify annotations (@OA\Get, @OA\Post, etc.) inside controllers, recompile the static JSON schema file by running:
 
-🧪 Postman Collection
-An export of the Postman integration testing environment can be found directly within the repository root (look for the .json collection file). Ensure you trigger the User Creation and Login workflows first to save the {{token}} global variable before querying protected endpoints.
+```
+Bash
+
+./vendor/bin/sail artisan l5-swagger:generate
+
+```
+
+### 🧪 Automated Testing Suite
+This service implements automated testing using feature integration tests to assert data parsing correctness, error responses, and controller middleware flows.
+
+Isolated Third-Party API Mocking
+To guarantee tests remain blazing fast, predictable, and 100% independent of network drops or Giphy rate limits, Guzzle calls are intercepted using a MockHandler. The test suite triggers internal bindings into Laravel's Service Container to swap real HTTP clients for predefined mocked JSON payloads (200 OK and 400 Bad Request), preventing the tests from ever hitting external servers over internet.
+
+Running the Tests:
+* Execute the entire testing suite:
+
+```
+Bash
+
+./vendor/bin/sail artisan test
+
+```
+
+* Filter and target the Giphy test suite specifically:
+
+```
+Bash
+
+./vendor/bin/sail artisan test --filter=GifIntegrationTest
+
+```
+
+### 🔌 API Endpoints Reference
+
+### 🔐 Authentication & User Management
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/users` | Registers a new user directly within the local ecosystem. |
+| `POST` | `/api/v1/users/login` | Validates credentials and returns a secure Bearer Access Token. |
+
+🎬 Giphy Integration & Personalization (Protected Endpoints)
+_All requests below require a valid Authorization: Bearer <token> header._
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/gifs?q={term}&limit={int}&offset={int}` | Queries Giphy API for matching items with dynamic pagination overrides. |
+| `GET` | `/api/v1/gifs/{id}` | Fetches a deep detailed object payload for a single GIF by its unique path identifier. |
+| `POST` | `/api/v1/gifs/favorites` | Links and saves a verified Giphy ID into the authenticated user's favorites collection. |
 
 
